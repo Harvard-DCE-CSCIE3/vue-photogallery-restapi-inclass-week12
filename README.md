@@ -16,9 +16,12 @@ Complete the transitio from mock data to the Express REST API, including:
 	- Load the gallery with photos from the backend
 	- Update detail/edit views with data from the backend
 	- Handle UI updates after create/update/delete actions
-- Handle form input and submission with API calls
+- Handle form input and submission with API calls - putting the Create in CRUD
 	- Use `v-model` for form inputs and submit handlers to send file data to the backend
 	- Update the UI based on success or error responses from the backend
+- Deployment to a hosting service with the Express backend deployed separately (e.g. Heroku, Render)
+	- VITE environment variables for API base URL
+	- rewrite rules for client-side routing in production
 
 
 ## Install and run

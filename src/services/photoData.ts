@@ -11,6 +11,93 @@ export interface Photo {
   [key: string]: any
 }
 
+const apiBaseURL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api'
+
+export async function listPhotos(): Promise<Photo[]> {
+  const response = await fetch(`${apiBaseURL}/photos`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch photos: ${response.status}`)
+  }
+
+  return response.json()
+}
+
+export async function createPhoto(
+	title: string,
+	file: File,
+	description?: string
+): Promise<Photo> {
+	const formData = new FormData()
+	formData.append('title', title)
+	formData.append('image', file)
+
+	if (description) {
+		formData.append('description', description)
+	}
+
+	const response = await fetch(`${apiBaseURL}/photos/`, {
+		method: 'POST',
+		body: formData,
+	})
+
+	if (!response.ok) {
+		throw new Error(`Failed to create photo: ${response.status}`)
+	}
+
+	return response.json()
+}
+
+export async function getPhoto(id: string): Promise<Photo | undefined> {
+	const response = await fetch(`${apiBaseURL}/photos/${id}`)
+
+	if (response.status === 404) {
+		return undefined
+	}
+
+	if (!response.ok) {
+		throw new Error(`Failed to fetch photo: ${response.status}`)
+	}
+
+	return response.json()
+}
+
+export async function updatePhoto(photo: Photo): Promise<Photo | undefined> {
+	const response = await fetch(`${apiBaseURL}/photos/${photo._id}`, {
+		method: 'PUT',
+		headers: {
+			'Content-Type': 'application/json',
+		},
+		body: JSON.stringify(photo),
+	})
+
+	if (response.status === 404) {
+		return undefined
+	}
+
+	if (!response.ok) {
+		throw new Error(`Failed to update photo: ${response.status}`)
+	}
+
+	return response.json()
+}
+
+export async function deletePhoto(id: string): Promise<boolean | undefined> {
+	const response = await fetch(`${apiBaseURL}/photos/${id}`, {
+		method: 'DELETE',
+	})
+
+	if (response.status === 404) {
+		return undefined
+	}
+
+	if (!response.ok) {
+		throw new Error(`Failed to delete photo: ${response.status}`)
+	}
+
+	return true
+}
+
 export const photos: Photo[] = [
 	{
 		"_id": "69b45b4b2dc14d5702d0cc9e",
@@ -80,32 +167,3 @@ export const photos: Photo[] = [
 		"updatedAt": "2026-03-26T01:05:20.801Z"
 	}
 ]
-
-export function getPhoto(id: string): Photo | undefined {
-	return photos.find((photo) => photo._id === id)
-}
-
-export function updatePhoto(photo: Photo): Photo | undefined {
-	const existingPhoto = photos.find((item) => item._id === photo._id)
-
-	if (!existingPhoto) {
-		return undefined
-	}
-
-	existingPhoto.title = photo.title
-	existingPhoto.description = photo.description
-	existingPhoto.updatedAt = new Date().toISOString()
-
-	return existingPhoto
-}
-
-export function deletePhoto(id: string): boolean {
-	const index = photos.findIndex((photo) => photo._id === id)
-
-	if (index === -1) {
-		return false
-	}
-
-	photos.splice(index, 1)
-	return true
-}

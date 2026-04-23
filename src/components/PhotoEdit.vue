@@ -8,39 +8,80 @@ const route = useRoute()
 const router = useRouter()
 
 const photo = ref<Photo | undefined>(undefined)
+const loading = ref(false)
+const error = ref<string | null>(null)
 const editedTitle = ref('')
 const editedDescription = ref('')
 
 watch(
   () => route.params.id,
   (newId) => {
-    photo.value = getPhoto(String(newId))
-    editedTitle.value = photo.value?.title || ''
-    editedDescription.value = photo.value?.description || ''
+    void loadPhoto(String(newId))
   },
   { immediate: true }
 )
 
-function submitPhotoEdit() {
-  if (!photo.value) return
+async function loadPhoto(id: string) {
+  loading.value = true
+  error.value = null
+  photo.value = undefined
 
-  updatePhoto({
-    ...photo.value,
-    title: editedTitle.value,
-    description: editedDescription.value,
-  })
-
-  router.push(`/photos/${photo.value._id}`)
+  try {
+    photo.value = await getPhoto(id)
+    editedTitle.value = photo.value?.title || ''
+    editedDescription.value = photo.value?.description || ''
+  } catch (e) {
+    editedTitle.value = ''
+    editedDescription.value = ''
+    error.value = 'Could not load photo'
+  } finally {
+    loading.value = false
+  }
 }
 
-function onDeletePhoto() {
+async function submitPhotoEdit() {
+  if (!photo.value) return
+
+  error.value = null
+
+  try {
+    const updatedPhoto = await updatePhoto({
+      ...photo.value,
+      title: editedTitle.value,
+      description: editedDescription.value,
+    })
+
+    if (!updatedPhoto) {
+      error.value = `Could not find a photo with id ${photo.value._id}.`
+      return
+    }
+
+    router.push(`/photos/${photo.value._id}`)
+  } catch (e) {
+    error.value = 'Could not update photo'
+  }
+}
+
+async function onDeletePhoto() {
   if (!photo.value) return
 
   const confirmed = window.confirm('Are you sure you want to delete this photo?')
   if (!confirmed) return
 
-  deletePhoto(photo.value._id)
-  router.push('/')
+  error.value = null
+
+  try {
+    const deleted = await deletePhoto(photo.value._id)
+
+    if (!deleted) {
+      error.value = `Could not find a photo with id ${photo.value._id}.`
+      return
+    }
+
+    router.push('/')
+  } catch (e) {
+    error.value = 'Could not delete photo'
+  }
 }
 </script>
 
@@ -48,7 +89,10 @@ function onDeletePhoto() {
   <section class="container py-3">
     <h1 class="h3 mb-3">Edit Photo</h1>
 
-    <form v-if="photo" @submit.prevent="submitPhotoEdit" class="card p-3">
+    <div v-if="loading" class="alert alert-info">Loading photo...</div>
+    <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
+
+    <form v-else-if="photo" @submit.prevent="submitPhotoEdit" class="card p-3">
       <div class="mb-3">
         <img
           :src="photo.imageUrl"

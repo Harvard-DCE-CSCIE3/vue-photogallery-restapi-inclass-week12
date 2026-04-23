@@ -32,11 +32,13 @@ From this project folder:
 
 	`npm install`
 
-2. Start the dev server
+2. Set your VITE_API_URL environment variable to the URL of your deployed Express backend (e.g. `https://your-backend-url.com`) or use default of `http://localhost:3000/` for local development.
+
+3. Start the dev server
 
 	`npm run dev`
 
-3. Open the URL shown in the terminal (usually http://localhost:5173)
+4. Open the URL shown in the terminal (usually http://localhost:5173)
 
 ---
 

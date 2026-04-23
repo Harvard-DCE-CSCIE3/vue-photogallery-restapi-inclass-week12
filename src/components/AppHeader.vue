@@ -7,6 +7,7 @@
 
     <div class="navbar-nav flex-row">
       <RouterLink to="/" class="nav-link text-white">Gallery</RouterLink>
+      <RouterLink to="/photos/new" class="nav-link text-white">Add Photo</RouterLink>
     </div>
   </nav>
 </template>

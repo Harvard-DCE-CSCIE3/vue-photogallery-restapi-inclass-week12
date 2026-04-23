@@ -4,29 +4,48 @@ import { getPhoto } from '../services/photoData.ts'
 import { useRoute } from 'vue-router'
 import { computed, watch, ref } from 'vue'
 
-        const route = useRoute()
-        const photo = ref<Photo | undefined>(undefined);
-        const editPath = computed(() => `/photos/${String(route.params.id)}/edit`)
+const route = useRoute()
+const photo = ref<Photo | undefined>(undefined)
+const loading = ref(false)
+const error = ref<string | null>(null)
+const editPath = computed(() => `/photos/${String(route.params.id)}/edit`)
 
-        watch(
-            () => route.params.id,
-            (newId) => {
-                photo.value = getPhoto(String(newId))
-            },
-            { immediate: true }
-        )
+watch(
+  () => route.params.id,
+  (newId) => {
+    void loadPhoto(String(newId))
+  },
+  { immediate: true }
+)
 
-        const formatDate = (dateString?: string) => {
-        if (!dateString) return 'N/A'
-            return new Date(dateString).toLocaleString()
-            }
+async function loadPhoto(id: string) {
+  loading.value = true
+  error.value = null
+  photo.value = undefined
+
+  try {
+    photo.value = await getPhoto(id)
+  } catch (e) {
+    error.value = 'Could not load photo'
+  } finally {
+    loading.value = false
+  }
+}
+
+const formatDate = (dateString?: string) => {
+  if (!dateString) return 'N/A'
+  return new Date(dateString).toLocaleString()
+}
 </script>
 
 <template>
   <section class="container py-3">
     <h1 class="h3 mb-3">Photo Details</h1>
 
-    <div v-if="photo" class="row g-3">
+    <div v-if="loading" class="alert alert-info">Loading photo...</div>
+    <div v-else-if="error" class="alert alert-danger">{{ error }}</div>
+
+    <div v-else-if="photo" class="row g-3">
       <div class="col-12 col-lg-8">
         <article class="card">
           <img
